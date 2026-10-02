@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <!-- Double buffered background layers for 0-flicker 3D crossfade -->
+  <div id="bg-layer-a" class="bg-layer active"></div>
+  <div id="bg-layer-b" class="bg-layer"></div>
+  <div id="bg-overlay" class="bg-overlay"></div>
+
+  <!-- Ambient 3D canvas particles -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Top Right Google Quick Bar (Gmail, Images, Google Apps 9-Dot Waffle, Profile Avatar) -->
+  <div class="top-bar-right">
+    <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="top-nav-link" title="Gmail">Gmail</a>
+    <a href="https://images.google.com" target="_blank" rel="noopener noreferrer" class="top-nav-link" title="Images">Images</a>
+
+    <!-- Google Apps 9-dot Waffle Button -->
+    <button id="google-apps-btn" class="top-icon-btn" title="Google apps">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <circle cx="5" cy="5" r="2.2"></circle>
+        <circle cx="12" cy="5" r="2.2"></circle>
+        <circle cx="19" cy="5" r="2.2"></circle>
+        <circle cx="5" cy="12" r="2.2"></circle>
+        <circle cx="12" cy="12" r="2.2"></circle>
+        <circle cx="19" cy="12" r="2.2"></circle>
+        <circle cx="5" cy="19" r="2.2"></circle>
+        <circle cx="12" cy="19" r="2.2"></circle>
+        <circle cx="19" cy="19" r="2.2"></circle>
+      </svg>
+    </button>
+
+    <!-- Google Profile Avatar Button -->
+    <button id="google-profile-btn" class="top-profile-btn" title="Google Account">
+      <img id="top-user-avatar" class="user-avatar-img" src="assets/user_avatar.png" alt="Profile" />
+      <div id="top-user-initial" class="user-avatar-initial" style="display:none;">B</div>
+    </button>
+  </div>
+
+  <!-- Google Apps 3D Glass Dropdown -->
+  <div id="google-apps-dropdown" class="google-apps-dropdown glass-panel-3d">
+    <div class="google-apps-header">
+      <span>Google Apps</span>
+    </div>
+    <div id="google-apps-grid" class="google-apps-grid">
+      <!-- Injected dynamically by google_menu.js -->
+    </div>
+    <div class="google-apps-footer">
+      <a href="https://about.google/products/" target="_blank" rel="noopener noreferrer" class="more-apps-btn">
+        More from Google
+      </a>
+    </div>
+  </div>
+
+  <!-- Google Profile Account 3D Glass Card Dropdown -->
+  <div id="google-profile-dropdown" class="google-profile-dropdown glass-panel-3d">
+    <!-- Top Account Card Box (Matching Chrome Profile) -->
+    <div class="chrome-profile-header-card">
+      <div class="profile-avatar-wrap">
+        <img id="popup-user-avatar" class="popup-avatar-img" src="assets/user_avatar.png" alt="Profile" />
+        <div id="popup-user-initial" class="popup-avatar-initial" style="display:none;">B</div>
+        <button id="change-avatar-btn" class="avatar-edit-badge" title="Change Profile Picture">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </button>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" />
+      </div>
+      <h3 id="popup-user-name" class="profile-card-name">Barman IT</h3>
+      <span id="popup-user-email" class="profile-card-email">businesskumarjangkhng@gmail.com</span>
+    </div>
+
+    <!-- Chrome Profile Action List -->
+    <div class="chrome-profile-menu-list">
+      <button class="chrome-menu-item" data-action="passwords">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-1.5 1.5L16 7m-1.5 1.5L13 10m-2 2l-6 6a3 3 0 1 1-4.24-4.24l6-6a7 7 0 1 1 9.9 0l.34.34z"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Passwords and autofill</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="manage-google-account">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Manage your Google Account</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="customize-profile">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Customize profile</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="chrome-account">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Your account in Chrome</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="signout-chrome">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Sign out of Chrome</span>
+      </button>
+
+      <div class="chrome-menu-divider"></div>
+
+      <button class="chrome-menu-item" data-action="add-profile">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Add Chrome profile</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="guest-profile">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12h20"/>
+            <circle cx="7" cy="15" r="3"/>
+            <circle cx="17" cy="15" r="3"/>
+            <path d="M10 15h4"/>
+            <path d="M6 9l2-5h8l2 5"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Open Guest profile</span>
+      </button>
+
+      <button class="chrome-menu-item" data-action="manage-profiles">
+        <span class="chrome-menu-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Manage Chrome profiles</span>
+      </button>
+
+      <div class="chrome-menu-divider"></div>
+
+      <!-- Developer Website Link (Opens in New Tab) -->
+      <a href="https://barman-it-solutions.vercel.app/" target="_blank" rel="noopener noreferrer" class="chrome-menu-item dev-credit-item" title="Visit Developer Website">
+        <span class="chrome-menu-icon dev-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </span>
+        <span class="chrome-menu-label">Dev: <strong>PARAG KUMAR BARMAN</strong></span>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="external-icon">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Customizable Bookmarks Area (Position dynamically adjusted: Top, Bottom, Left, Right, Center, Hidden) -->
+  <div id="bookmarks-wrapper" class="bookmarks-container"></div>
+
+  <!-- Main Center 3D Stage -->
+  <main class="dashboard-stage">
+    <!-- Clock & Greeting Widget -->
+    <div class="clock-widget">
+      <div id="clock-greeting" class="clock-greeting">Good day, <span class="user-name-highlight">Barman IT</span> ✨</div>
+      <div class="clock-display">
+        <span id="clock-time" class="time-main">12:00</span>
+        <span id="clock-seconds" class="time-seconds">:00</span>
+        <span id="clock-period" class="time-period">PM</span>
+      </div>
+      <div id="clock-date" class="clock-date">Thursday, October 2, 2026</div>
+    </div>
+
+    <!-- Dynamic 3D Capsule Search Bar -->
+    <div class="search-section">
+      <div class="search-capsule-3d" id="search-capsule">
+        <!-- Search Engine Switcher -->
+        <div class="search-engine-selector" id="search-engine-selector">
+          <button type="button" class="engine-trigger-btn" id="search-engine-btn" title="Choose Search Engine">
+            <!-- Icon injected by search.js -->
+          </button>
+          <div class="engine-dropdown-menu glass-panel-3d" id="search-engine-dropdown">
+            <!-- Engine options injected by search.js -->
+          </div>
+        </div>
+
+        <!-- Search Form -->
+        <form id="search-form" class="search-form" autocomplete="off">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Search Google or type a URL..." 
+            spellcheck="false" 
+            autocomplete="off"
+          />
+          <button type="button" id="search-clear-btn" class="search-tool-btn clear-btn" title="Clear text" style="display: none;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+          <button type="button" id="search-voice-btn" class="search-tool-btn voice-btn" title="Voice Search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <button type="submit" id="search-submit-btn" class="search-submit-btn" title="Search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+      <div class="search-hint">Press <kbd>/</kbd> or <kbd>Ctrl+K</kbd> to search instantly</div>
+    </div>
+
+    <!-- 3D Stylish Shortcuts Grid -->
+    <section class="shortcuts-section">
+      <div id="shortcuts-grid" class="shortcuts-grid-container">
+        <!-- Rendered dynamically by shortcuts.js -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Quick Floating Action Buttons (Bottom Right) -->
+  <div class="quick-floating-bar">
+    <button id="quick-next-wp-btn" class="floating-circle-btn" title="Shuffle / Next Wallpaper (Spacebar)">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+    </button>
+    <button id="settings-toggle-btn" class="floating-circle-btn" title="Open Settings (Press ,)">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Add/Edit Shortcut 3D Modal -->
+  <div id="shortcut-modal" class="modal-backdrop">
+    <div class="modal-card-3d">
+      <div class="modal-header">
+        <h3 id="shortcut-modal-title">Add New 3D Shortcut</h3>
+        <button class="modal-close-icon" id="shortcut-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="shortcut-title-input">Title / Name</label>
+          <input type="text" id="shortcut-title-input" placeholder="e.g. YouTube, GitHub" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="shortcut-url-input">Target URL</label>
+          <input type="text" id="shortcut-url-input" placeholder="https://..." autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="shortcut-modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="shortcut-modal-save">Save Shortcut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete 3D Settings Menu & Customizer Modal Drawer -->
+  <div id="settings-modal" class="modal-backdrop">
+    <div class="settings-drawer-3d">
+      <div class="settings-header">
+        <div class="settings-title-group">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <h2>Theme & Dashboard Customizer</h2>
+        </div>
+        <button class="modal-close-icon" id="settings-modal-close">✕</button>
+      </div>
+
+      <div class="settings-container">
+        <!-- Sidebar Navigation Tabs -->
+        <nav class="settings-nav">
+          <button class="settings-tab-btn active" data-tab="wallpaper">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span>Wallpapers</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="bookmarks">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>Bookmarks</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="shortcuts">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Shortcuts</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Search Bar</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="performance">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>3D & Speed</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="clock">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Clock & Greeting</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="backup">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Backup & Reset</span>
+          </button>
+        </nav>
+
+        <!-- Tab Content Area -->
+        <div class="settings-content-wrapper">
+          <!-- 1. WALLPAPERS TAB -->
+          <div class="settings-tab-panel active" data-tab-content="wallpaper">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Wallpaper Mode</h3>
+              <div class="form-group">
+                <label for="setting-wp-mode">Select Background Source</label>
+                <select id="setting-wp-mode" class="custom-select">
+                  <option value="online_auto">🌐 Online Auto Rotate (Dynamic 4K Categories)</option>
+                  <option value="local_slideshow">🖼️ Local Multi-Image Slideshow (Uploaded Images)</option>
+                  <option value="local_single">👤 Single Local Uploaded Image</option>
+                  <option value="gradient_3d">⚡ 3D Mesh Gradients (Instant 0ms Offline)</option>
+                </select>
+              </div>
+
+              <!-- Online Specific Options -->
+              <div id="wp-online-options" class="sub-panel">
+                <div class="form-group">
+                  <label for="setting-wp-category">Online Category</label>
+                  <select id="setting-wp-category" class="custom-select">
+                    <option value="cyberpunk">Cyberpunk & Neon</option>
+                    <option value="space">Deep Space & Cosmos</option>
+                    <option value="nature">Nature & Landscapes</option>
+                    <option value="abstract">3D Abstract & Render</option>
+                    <option value="minimal">Minimal & Clean</option>
+                    <option value="anime">Anime & Aesthetics</option>
+                    <option value="city">Urban City & Architecture</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Auto Rotation Interval -->
+              <div class="form-group">
+                <label for="setting-wp-interval">Auto-Change Interval</label>
+                <select id="setting-wp-interval" class="custom-select">
+                  <option value="0">On Every New Tab Only</option>
+                  <option value="15000">Every 15 Seconds</option>
+                  <option value="30000">Every 30 Seconds</option>
+                  <option value="60000">Every 1 Minute</option>
+                  <option value="300000">Every 5 Minutes</option>
+                  <option value="900000">Every 15 Minutes</option>
+                  <option value="3600000">Every 1 Hour</option>
+                </select>
+              </div>
+
+              <!-- Sliders for Readability: Blur & Brightness -->
+              <div class="form-row">
+                <div class="form-group">
+                  <div class="label-with-value">
+                    <label for="setting-wp-blur">Background Blur</label>
+                    <span id="setting-wp-blur-val">0px</span>
+                  </div>
+                  <input type="range" id="setting-wp-blur" min="0" max="20" step="1" value="0">
+                </div>
+                <div class="form-group">
+                  <div class="label-with-value">
+                    <label for="setting-wp-brightness">Brightness</label>
+                    <span id="setting-wp-brightness-val">90%</span>
+                  </div>
+                  <input type="range" id="setting-wp-brightness" min="30" max="100" step="5" value="90">
+                </div>
+              </div>
+
+              <!-- Local Images Upload Dropzone & Gallery -->
+              <div id="wp-local-options" class="sub-panel">
+                <h4 class="sub-title">Upload Local Wallpapers (Single or Multiple)</h4>
+                <div class="dropzone" id="local-wp-dropzone">
+                  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <p class="dropzone-main-text">Click or Drag & Drop local images here</p>
+                  <span class="dropzone-sub-text">Supports JPG, PNG, WebP, GIF (Upload 1 or 20+ images)</span>
+                  <input type="file" id="local-wp-file-input" multiple accept="image/*" style="display: none;">
+                </div>
+                <div id="upload-status-indicator" class="status-msg"></div>
+
+                <div class="gallery-controls-header">
+                  <span class="gallery-title">Your Uploaded Gallery</span>
+                  <button type="button" class="btn-text-danger" id="clear-all-local-images-btn">Clear All</button>
+                </div>
+                <div id="local-images-gallery" class="local-gallery-grid">
+                  <!-- Thumbnails populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. BOOKMARKS TAB -->
+          <div class="settings-tab-panel" data-tab-content="bookmarks">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Bookmarks Position & Layout</h3>
+              <p class="section-desc">Choose where you want your Chrome bookmarks to appear on the screen.</p>
+              
+              <div class="form-group">
+                <label for="setting-bm-position">Bookmarks Bar Position</label>
+                <select id="setting-bm-position" class="custom-select">
+                  <option value="top">Top Bar (Across the top)</option>
+                  <option value="bottom">Bottom Dock (Above taskbar)</option>
+                  <option value="left">Left 3D Sidebar (Collapsible)</option>
+                  <option value="right">Right 3D Sidebar (Collapsible)</option>
+                  <option value="center_dock">Center Floating Widget</option>
+                  <option value="hidden">Hidden (Clean look)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-bm-style">Bookmarks Style</label>
+                <select id="setting-bm-style" class="custom-select">
+                  <option value="icon_text">Icon + Title (Standard)</option>
+                  <option value="icon_only">Icon Only (Ultra Compact)</option>
+                  <option value="compact">Pill Chips</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SHORTCUTS TAB -->
+          <div class="settings-tab-panel" data-tab-content="shortcuts">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Shortcuts Div Styling</h3>
+              
+              <div class="form-group">
+                <label for="setting-sc-style">Visual Style</label>
+                <select id="setting-sc-style" class="custom-select">
+                  <option value="glass_3d">3D Frosted Glass (Layered Depth & Glare)</option>
+                  <option value="neon_glow">Cyber Neon Glow (Vibrant Edges)</option>
+                  <option value="minimal">Minimalist Clean</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-sc-columns">Grid Columns</label>
+                <select id="setting-sc-columns" class="custom-select">
+                  <option value="4">4 Columns</option>
+                  <option value="5">5 Columns (Default)</option>
+                  <option value="6">6 Columns</option>
+                  <option value="8">8 Columns (Compact)</option>
+                </select>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Interactive 3D Mouse Tilt</strong>
+                  <span>Cards smoothly tilt in 3D perspective following cursor coordinates</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-sc-tilt" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. SEARCH BAR TAB -->
+          <div class="settings-tab-panel" data-tab-content="search">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Search Engine & Behavior</h3>
+              
+              <div class="form-group">
+                <label for="setting-search-engine">Default Search Provider</label>
+                <select id="setting-search-engine" class="custom-select">
+                  <option value="google">Google</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="duckduckgo">DuckDuckGo</option>
+                  <option value="bing">Microsoft Bing</option>
+                  <option value="github">GitHub</option>
+                  <option value="wikipedia">Wikipedia</option>
+                  <option value="perplexity">Perplexity AI</option>
+                </select>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Open Search in New Tab</strong>
+                  <span>Keep this dashboard open and execute queries in a separate tab</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-search-newtab">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. 3D & PERFORMANCE TAB -->
+          <div class="settings-tab-panel" data-tab-content="performance">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Smooth Performance & Optimization</h3>
+              <p class="section-desc">Fine-tune animations and hardware acceleration so your browser stays lightning fast.</p>
+              
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Ambient 3D Floating Particles</strong>
+                  <span>Lightweight 3D depth constellation responding subtly to mouse movement</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-enable-particles" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Ultra-Performance Mode (For Potato PCs / Laptops)</strong>
+                  <span>Disables backdrop-filter blur & heavy drop shadows for guaranteed 60+ FPS on any device</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-performance-mode">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. CLOCK & PERSONALIZATION TAB -->
+          <div class="settings-tab-panel" data-tab-content="clock">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Clock & Personal Greetings</h3>
+              
+              <div class="form-group">
+                <label for="setting-user-name">Your Name / Title</label>
+                <input type="text" id="setting-user-name" placeholder="e.g. Alex, Captain">
+              </div>
+
+              <div class="form-group">
+                <label for="setting-clock-format">Time Format</label>
+                <select id="setting-clock-format" class="custom-select">
+                  <option value="12h">12-Hour (e.g. 02:45 PM)</option>
+                  <option value="24h">24-Hour (e.g. 14:45)</option>
+                </select>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Show Seconds</strong>
+                  <span>Display precise ticking seconds</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-show-seconds" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-text">
+                  <strong>Show Date</strong>
+                  <span>Display weekday, month, day, and year</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-show-date" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. BACKUP & RESET TAB -->
+          <div class="settings-tab-panel" data-tab-content="backup">
+            <div class="panel-section">
+              <h3 class="panel-section-title">Backup & Restore</h3>
+              <p class="section-desc">Export your custom shortcuts and visual settings to a JSON file or restore them anytime.</p>
+              
+              <div class="backup-actions">
+                <button type="button" class="btn btn-secondary" id="backup-export-btn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export Settings (JSON)
+                </button>
+                <label class="btn btn-secondary file-upload-btn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Import Settings
+                  <input type="file" id="backup-import-file" accept=".json" style="display: none;">
+                </label>
+                <button type="button" class="btn btn-danger" id="backup-reset-btn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  Reset All to Defaults
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Drawer Developer Footer -->
+        <div class="settings-drawer-footer">
+          <span>Theme Developer: <a href="https://barman-it-solutions.vercel.app/" target="_blank" rel="noopener noreferrer" class="dev-brand-link">PARAG KUMAR BARMAN ↗</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts in dependency order -->
+  <script src="js/storage.js"></script>
+  <script src="js/wallpapers.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/shortcuts.js"></script>
+  <script src="js/bookmarks.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/google_menu.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

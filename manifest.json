@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Jangkhng 3D NeoTab - Ultimate Theme & Dashboard",
+  "version": "1.0.0",
+  "author": "PARAG KUMAR BARMAN",
+  "homepage_url": "https://barman-it-solutions.vercel.app/",
+  "description": "Ultra-fast, 3D dynamic theme with auto-changing online & local wallpapers, customizable bookmarks, 3D shortcuts, and smart search.",
+  "permissions": [
+    "storage",
+    "bookmarks",
+    "identity",
+    "identity.email",
+    "tabs"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "action": {
+    "default_title": "Jangkhng 3D NeoTab"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
